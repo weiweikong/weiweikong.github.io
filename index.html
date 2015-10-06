@@ -197,6 +197,7 @@
     
     <div class="article-entry" itemprop="articleBody">
       
+        
         <h2 id="Test">Test</h2><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="preprocessor">#<span class="keyword">pragma</span> once</span></span><br><span class="line"></span><br><span class="line"><span class="preprocessor">#<span class="keyword">include</span> <span class="string">&lt;test_mavros/utils/pid_controller.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="keyword">namespace</span> testsetup &#123;</span><br><span class="line"><span class="keyword">class</span> TestSetup &#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">	TestSetup() :</span><br><span class="line">		nh(<span class="string">"~"</span>)</span><br><span class="line">	&#123; &#125;;</span><br><span class="line">	~TestSetup() &#123;&#125;;</span><br><span class="line"></span><br><span class="line">	ros::NodeHandle nh;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">bool</span> use_pid;</span><br><span class="line">	<span class="keyword">double</span> rate;</span><br><span class="line">	<span class="keyword">int</span> num_of_tests;</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">void</span> <span class="title">setup</span><span class="params">(<span class="keyword">const</span> ros::NodeHandle &amp;nh)</span></span>&#123;</span><br><span class="line">		nh.param(<span class="string">"use_pid"</span>, use_pid, <span class="literal">true</span>);</span><br><span class="line">		nh.param(<span class="string">"rate"</span>, rate, <span class="number">10.0</span>);</span><br><span class="line">		nh.param(<span class="string">"num_of_tests"</span>, num_of_tests, <span class="number">10</span>);</span><br><span class="line">	&#125;</span><br><span class="line">&#125;;</span><br><span class="line">&#125;;	<span class="comment">// namespace testsetup</span></span><br></pre></td></tr></table></figure>
 <h2 id="Test2">Test2</h2><h2 id="Test3">Test3</h2>
       
@@ -222,7 +223,6 @@
   </div>
   
 </article>
-
 
 
 
