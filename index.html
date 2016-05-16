@@ -107,7 +107,7 @@
 				
 				<section class="switch-part switch-part2">
 					<div class="widget tagcloud" id="js-tagcloud">
-						<a href="/tags/Hardware-RealSense/" style="font-size: 10px;">Hardware, RealSense</a> <a href="/tags/随笔/" style="font-size: 20px;">随笔</a>
+						<a href="/tags/Hardware-RealSense/" style="font-size: 10px;">Hardware, RealSense</a> <a href="/tags/ROS/" style="font-size: 10px;">ROS</a> <a href="/tags/随笔/" style="font-size: 20px;">随笔</a>
 					</div>
 				</section>
 				
@@ -171,6 +171,75 @@
 </nav>
       <div class="body-wrap">
   
+    <article id="post-160516-ROS-queue-size" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2016/05/16/160516-ROS-queue-size/" class="article-date">
+  	<time datetime="2016-05-16T03:59:34.000Z" itemprop="datePublished">2016-05-16</time>
+</a>
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2016/05/16/160516-ROS-queue-size/">160516-ROS-queue_size</a>
+    </h1>
+  
+
+      </header>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        
+        <h2 id="一、函数定义">一、函数定义</h2><figure class="highlight crystal"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="symbol">ros:</span><span class="symbol">:Subscriber</span> subscribe(const <span class="symbol">std:</span><span class="symbol">:string&amp;</span> topic, uint32_t queue_size, &lt;callback, which may involve multiple arguments&gt;, const <span class="symbol">ros:</span><span class="symbol">:TransportHints&amp;</span> transport_hints = <span class="symbol">ros:</span><span class="symbol">:TransportHints</span>());</span><br></pre></td></tr></table></figure>
+<ul>
+<li>主要讨论<code>queue_size</code>的影响。</li>
+<li>This is the incoming message queue size roscpp will use for your callback. 系统设置message queue的大小。</li>
+<li>If messages are arriving too fast and you are unable to keep up, roscpp will start throwing away messages. 一般而言，如果设置<code>queue_size=10</code>，即如果收到的数据大于10，则将开始抛弃最初收到的第一个数据。</li>
+</ul>
+<h2 id="二、设置多大合适">二、设置多大合适</h2><h3 id="1-_设置为0">1. 设置为<code>0</code></h3><ul>
+<li>A value of 0 here means an infinite queue, which can be dangerous. <code>queue_size</code>大小会影响内存的使用。<h3 id="2-_设置为1,2,3">2. 设置为<code>1,2,3</code></h3></li>
+<li>适用于10Hz的更新情况</li>
+<li>设置为1，意味着系统总是使用最新发布的数据，only care about the latest measurement.</li>
+</ul>
+<h3 id="3-_设置大于10">3. 设置大于<code>10</code></h3><ul>
+<li>系统更需要按顺序执行，例如digital_IO信号。</li>
+</ul>
+<h2 id="Reference">Reference</h2><p><a href="http://wiki.ros.org/rospy/Overview/Publishers%20and%20Subscribers#Choosing_a_good_queue_size" target="_blank" rel="external">http://wiki.ros.org/rospy/Overview/Publishers%20and%20Subscribers#Choosing_a_good_queue_size</a></p>
+
+      
+    </div>
+    
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/ROS/">ROS</a></li></ul>
+	</div>
+
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+    
+  </div>
+  
+</article>
+
+
+
+
+
+
+  
     <article id="post-20160305" class="article article-type-post" itemscope itemprop="blogPost">
   
     <div class="article-meta">
@@ -188,7 +257,7 @@
         
   
     <h1 itemprop="name">
-      <a class="article-title" href="/2016/03/05/20160305/">Geekband.Home 1</a>
+      <a class="article-title" href="/2016/03/05/20160305/">[Geekband] Homework 1</a>
     </h1>
   
 
