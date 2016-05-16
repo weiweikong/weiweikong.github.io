@@ -198,7 +198,7 @@
     <div class="article-entry" itemprop="articleBody">
       
         
-        <h2 id="一、函数定义">一、函数定义</h2><figure class="highlight crystal"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="symbol">ros:</span><span class="symbol">:Subscriber</span> subscribe(const <span class="symbol">std:</span><span class="symbol">:string&amp;</span> topic, uint32_t queue_size, &lt;callback, which may involve multiple arguments&gt;, const <span class="symbol">ros:</span><span class="symbol">:TransportHints&amp;</span> transport_hints = <span class="symbol">ros:</span><span class="symbol">:TransportHints</span>());</span><br></pre></td></tr></table></figure>
+        <h2 id="一、函数定义">一、函数定义</h2><figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ros::Subscriber subscribe(const std::string&amp; topic, uint32_t queue_size, &lt;callback, which may involve multiple arguments&gt;, const ros::TransportHints&amp; transport_hints = ros::TransportHints());</span><br></pre></td></tr></table></figure>
 <ul>
 <li>主要讨论<code>queue_size</code>的影响。</li>
 <li>This is the incoming message queue size roscpp will use for your callback. 系统设置message queue的大小。</li>
