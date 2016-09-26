@@ -171,6 +171,211 @@
 </nav>
       <div class="body-wrap">
   
+    <article id="post-Setup-AWS-EC2-with-Tensorflow-and-Caffe" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2016/09/26/Setup-AWS-EC2-with-Tensorflow-and-Caffe/" class="article-date">
+  	<time datetime="2016-09-26T11:55:44.000Z" itemprop="datePublished">2016-09-26</time>
+</a>
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2016/09/26/Setup-AWS-EC2-with-Tensorflow-and-Caffe/">Setup AWS EC2 with Tensorflow and Caffe for Deep Learning</a>
+    </h1>
+  
+
+      </header>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        
+        <h2 id="1-_AWS_EC2_的建立">1. AWS EC2 的建立</h2><ul>
+<li><p>AMI 选择</p>
+<p><code>Ubuntu Server 14.04 LTS (HVM), SSD Volume Type - ami-48db9d28</code></p>
+</li>
+<li><p>GPU Instance 选择</p>
+<p>目前只有<code>g2.2xlarge</code>是最廉价的方案，里面的硬盘空间最大为60g</p>
+</li>
+<li><p>因此需要添加 EBS 硬盘来扩充空间</p>
+<ul>
+<li>Root - <code>/dev/sda1</code> 60GB</li>
+<li>ebs - <code>/dev/sdb</code> 200GB</li>
+</ul>
+</li>
+</ul>
+<h2 id="2-_Access_EC2_through_ssh">2. Access EC2 through <code>ssh</code></h2><ul>
+<li><p>使用<code>ssh</code>连接系统</p>
+<ul>
+<li>weiwei_0903.pem 是下载到本地一个目录的key</li>
+<li>然后执行下面语句</li>
+</ul>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ssh -<span class="tag">i</span> <span class="string">"weiwei_0903.pem"</span> ubuntu@ec2-<span class="number">52</span>-<span class="number">53</span>-<span class="number">235</span>-<span class="number">35</span><span class="class">.us-west-1</span><span class="class">.compute</span><span class="class">.amazonaws</span><span class="class">.com</span></span><br></pre></td></tr></table></figure>
+<ul>
+<li>让 know_host 记住这个IP地址即可</li>
+</ul>
+</li>
+</ul>
+<h2 id="3-_加载_EBS_到刚才建立的_GPU_Instance">3. 加载 EBS 到刚才建立的 GPU Instance</h2><ul>
+<li><p>查看EBS是不是存在</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">ubuntu@ip-*-*-*-*:~$ lsblk</span><br><span class="line">NAME    MAJ:MIN RM   SIZE RO TYPE MOUNTPOINT</span><br><span class="line">xvda    <span class="number">202</span>:<span class="number">0</span>    <span class="number">0</span>     <span class="number">8</span>G  <span class="number">0</span> disk </span><br><span class="line">`-xvda1 <span class="number">202</span>:<span class="number">1</span>    <span class="number">0</span>     <span class="number">8</span>G  <span class="number">0</span> part /</span><br><span class="line">xvdb    <span class="number">202</span>:<span class="number">16</span>   <span class="number">0</span>   <span class="number">100</span>G  <span class="number">0</span> disk /home/ubuntu/workspace</span><br></pre></td></tr></table></figure>
+<ul>
+<li>其中 xvdb 是我单独添加的 EBS 硬盘。在最初，<code>MOUNTPOINT</code>下的<code>/home/ubuntu/workspace</code>应该是没有的，可以通过下面的步骤完成。</li>
+</ul>
+</li>
+<li><p>查询EBS是否已经有 File System</p>
+<figure class="highlight gradle"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[ec2-user ~]$ sudo <span class="keyword">file</span> -s <span class="regexp">/dev/</span>xvdb</span><br><span class="line"><span class="regexp">/dev/</span>xvdb: data</span><br></pre></td></tr></table></figure>
+<ul>
+<li><p>返回值是<code>data</code>意味着这个device目前没有文件系统，需要进一步格式化</p>
+<figure class="highlight accesslog"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">[ec2-user ~]</span>$ sudo mkfs -t ext4 /dev/xvdb</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>再次查看</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="title">ec2</span>-user ~]$ sudo file -s /dev/xvdb</span><br><span class="line">/dev/xvdb: <span class="type">Linux</span> rev <span class="number">1.0</span> ext4 filesystem <span class="typedef"><span class="keyword">data</span>, <span class="type">UUID</span>=1701d228-e1bd-4094-a14c-8c64d6819362 <span class="container">(<span class="title">needs</span> <span class="title">journal</span> <span class="title">recovery</span>)</span> <span class="container">(<span class="title">extents</span>)</span> <span class="container">(<span class="title">large</span> <span class="title">files</span>)</span> <span class="container">(<span class="title">huge</span> <span class="title">files</span>)</span></span></span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+</li>
+<li><p>挂载格式化好的device到当前目录</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">ubuntu@ip-*-*-*-*:~$ sudo mount /dev/xvdb workspace</span><br><span class="line">ubuntu@ip-*-*-*-*:~$ lsblk</span><br><span class="line">NAME    MAJ:MIN RM   SIZE RO TYPE MOUNTPOINT</span><br><span class="line">xvda    <span class="number">202</span>:<span class="number">0</span>    <span class="number">0</span>     <span class="number">8</span>G  <span class="number">0</span> disk </span><br><span class="line">`-xvda1 <span class="number">202</span>:<span class="number">1</span>    <span class="number">0</span>     <span class="number">8</span>G  <span class="number">0</span> part /</span><br><span class="line">xvdb    <span class="number">202</span>:<span class="number">16</span>   <span class="number">0</span>   <span class="number">100</span>G  <span class="number">0</span> disk /home/ubuntu/workspace</span><br></pre></td></tr></table></figure>
+<ul>
+<li>此时就可以看到<code>xvdb</code>这个硬盘的挂载点。</li>
+</ul>
+</li>
+<li><p>添加权限</p>
+<figure class="highlight crystal"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$ </span>sudo chmod go+rw workspace</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>关于其他Storage</p>
+<figure class="highlight smali"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">/dev/sda = /dev/xvda in the<span class="instruction"> instance </span>8Gb <span class="string">"EBS persistent storage"</span></span><br><span class="line">/dev/sdb = /dev/xvdb in the<span class="instruction"> instance </span>400Gb <span class="string">"Non persistent storage"</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>查看 Storage</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="title">df</span> -h</span><br></pre></td></tr></table></figure>
+<p>​</p>
+</li>
+</ul>
+<h2 id="4-_安装相关软件">4. 安装相关软件</h2><ul>
+<li><p>基本依赖库</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo apt-get update&#10;sudo apt-get upgrade&#10;sudo apt-get install -y build-essential git python-pip libfreetype6-dev libxft-dev libncurses-dev libopenblas-dev gfortran python-matplotlib libblas-dev liblapack-dev libatlas-base-dev python-dev python-pydot linux-headers-generic linux-image-extra-virtual unzip python-numpy swig python-pandas python-sklearn unzip wget pkg-config zip g++ zlib1g-dev&#10;sudo pip install -U pip</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><del>Install Python2.7, Anconda, CUDA 7.5.178, CUDNN 7.0, Tensorflow 0.10.0</del></p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git clone https://gist.github.com/weiweikong/374e93d9ccb88ea45341268a06897259 aws-tensorflow-python2.7-setup</span><br></pre></td></tr></table></figure>
+<ul>
+<li><del>注意给bash文件权限</del></li>
+</ul>
+</li>
+<li><p>Set a folder to <code>/mnt</code></p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"># stop on error&#10;set -e&#10;############################################&#10;# install into /mnt/bin&#10;sudo mkdir -p /mnt/bin&#10;sudo chown ubuntu:ubuntu /mnt/bin</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>Install Anaconda</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">wget https://repo.continuum.io/archive/Anaconda2-4.1.1-Linux-x86_64.sh&#10;bash Anaconda2-4.1.1-Linux-x86_64.sh -b -p /mnt/bin/anaconda2&#10;rm Anaconda2-4.1.1-Linux-x86_64.sh&#10;&#10;echo &#39;export PATH=&#34;/mnt/bin/anaconda2/bin:$PATH&#34;&#39; &#62;&#62; ~/.bashrc</span><br></pre></td></tr></table></figure>
+<p>​</p>
+</li>
+<li><p>Install Required Packages</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># install the required packages</span></span><br><span class="line">sudo apt-get update &amp;&amp; sudo apt-get -y upgrade</span><br><span class="line">sudo apt-get -y install linux-headers-$(uname -r) linux-image-extra-`uname -r`</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>Install CUDA 7.5</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"># install cuda&#10;wget http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1404/x86_64/cuda-repo-ubuntu1404_7.5-18_amd64.deb&#10;sudo dpkg -i cuda-repo-ubuntu1404_7.5-18_amd64.deb&#10;rm cuda-repo-ubuntu1404_7.5-18_amd64.deb&#10;sudo apt-get update&#10;sudo apt-get install -y cuda</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>Manually download CUDNN 7.5 and upload</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">scp -i your_pem_file.pem cudnn-7.5-linux-x64-v5.0-ga.tgz ubuntu@ec2-54-67-18-98.us-west-1.compute.amazonaws.com:~/.</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>Install cuDNN 7.5.1</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"># get cudnn&#10;tar xvzf cudnn-7.5-linux-x64-v5.1.tgz&#10;cd cuda&#10;sudo cp lib64/* /usr/local/cuda/lib64/&#10;sudo cp include/* /usr/local/cuda/include/&#10;sudo chmod a+r /usr/local/cuda/include/cudnn.h /usr/local/cuda/lib64/libcudnn*&#10;&#10;echo &#39;export CUDA_HOME=/usr/local/cuda&#10;export CUDA_ROOT=/usr/local/cuda&#10;export PATH=$PATH:$CUDA_ROOT/bin:$HOME/bin&#10;export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CUDA_ROOT/lib64&#10;&#39; &#62;&#62; ~/.bashrc</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>Install Tensorflow with only cuDNN 7.5.1 and Python 2.7</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">export TF_BINARY_URL=https://storage.googleapis.com/tensorflow/linux/gpu/tensorflow-0.10.0-cp27-none-linux_x86_64.whl&#10;/mnt/bin/anaconda2/bin/pip install $TF_BINARY_URL</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>Install Caffe 依赖库</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo apt-get install libprotobuf-dev libleveldb-dev libsnappy-dev libopencv-dev libhdf5-serial-dev protobuf-compiler&#10;sudo apt-get install --no-install-recommends libboost-all-dev&#10;sudo apt-get install libgflags-dev libgoogle-glog-dev liblmdb-dev</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>配置 Caffe 文件并编译</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cp Makefile.config.example Makefile.config&#10;# Adjust Makefile.config (for example, if using Anaconda Python, or if cuDNN is desired)&#10;&#10;mkdir build&#10;cd build&#10;cmake ..&#10;&#10;make all&#10;make test&#10;make runtest</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>Test Caffe Install</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sh data/mnist/get_mnist.sh&#10;sh examples/mnist/create_mnist.sh&#10;sh examples/mnist/train_lenet.sh</span><br></pre></td></tr></table></figure>
+<p>​</p>
+</li>
+<li><p>Monitor Code</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"># install monitoring programs&#10;sudo wget https://git.io/gpustat.py -O /usr/local/bin/gpustat&#10;sudo chmod +x /usr/local/bin/gpustat&#10;sudo nvidia-smi daemon&#10;sudo apt-get -y install htop</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>Ref: <a href="http://www.pyimagesearch.com/2016/07/04/how-to-install-cuda-toolkit-and-cudnn-for-deep-learning/" target="_blank" rel="external">http://www.pyimagesearch.com/2016/07/04/how-to-install-cuda-toolkit-and-cudnn-for-deep-learning/</a></p>
+</li>
+</ul>
+<h3 id="4-1_Trouble_Shooting">4.1 Trouble Shooting</h3><ul>
+<li><p>Caffe 遇到 <code>locale::facet::_S_create_c_locale name not valid</code></p>
+<ul>
+<li>add <code>export LC_ALL=&quot;en_US.UTF-8&quot;</code> to <code>bashrc</code></li>
+<li>Ref: <a href="https://gist.github.com/wangruohui/679b05fcd1466bb0937f" target="_blank" rel="external">https://gist.github.com/wangruohui/679b05fcd1466bb0937f</a></li>
+</ul>
+</li>
+<li><p>Tensorflwo 遇到 <code>AttributeError: &#39;GFile&#39; object has no attribute &#39;size&#39;</code></p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo chmod a+r /usr/local/cuda/include/cudnn.h /usr/local/cuda/lib64/libcudnn*</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><code>libdc1394 error: Failed to initialize libdc1394</code></p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo ln /dev/null /dev/raw1394</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>Cafee 遇到 <code>Aborted at 1458527401 (unix time) try &quot;date -d @1458527401&quot; if you are using GNU date</code></p>
+<ul>
+<li><p>Check Nvidia GPUs List</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ nvidia-smi&#10;Mon Sep 26 18:01:53 2016       &#10;+------------------------------------------------------+                       &#10;| NVIDIA-SMI 352.63     Driver Version: 352.63         |                       &#10;|-------------------------------+----------------------+----------------------+&#10;| GPU  Name        Persistence-M| Bus-Id        Disp.A | Volatile Uncorr. ECC |&#10;| Fan  Temp  Perf  Pwr:Usage/Cap|         Memory-Usage | GPU-Util  Compute M. |&#10;|===============================+======================+======================|&#10;|   0  Tesla K40c          Off  | 0000:02:00.0     Off |                    0 |&#10;| 31%   69C    P0    74W / 235W |    150MiB / 11519MiB |     66%      Default |&#10;+-------------------------------+----------------------+----------------------+&#10;|   1  GeForce GT 610      Off  | 0000:81:00.0     N/A |                  N/A |&#10;| 40%   43C    P8    N/A /  N/A |    277MiB /  1023MiB |     N/A      Default |&#10;+-------------------------------+----------------------+----------------------+&#10;|   2  Tesla K40c          Off  | 0000:82:00.0     Off |                    0 |&#10;| 30%   65C    P0    68W / 235W |    113MiB / 11519MiB |      0%      Default |&#10;+-------------------------------+----------------------+----------------------+</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>Set Specific GPU Visible</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">CUDA_VISIBLE_DEVICES=1&#9;Only device 1 will be seen&#10;CUDA_VISIBLE_DEVICES=0,1&#9;Devices 0 and 1 will be visible&#10;CUDA_VISIBLE_DEVICES=&#8221;0,1&#8221;&#9;Same as above, quotation marks are optional&#10;CUDA_VISIBLE_DEVICES=0,2,3&#9;Devices 0, 2, 3 will be visible; device 1 is masked</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>目前选择两个GPU工作不会报错</p>
+</li>
+<li><p>Ref:<a href="https://github.com/BVLC/caffe/issues/1993" target="_blank" rel="external">https://github.com/BVLC/caffe/issues/1993</a></p>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="4-2_Access_to_EC2_using_FileZilla">4.2 Access to EC2 using FileZilla</h3><ul>
+<li>Download FileZilla and setup.</li>
+<li>Add <code>.pem</code> key file<ul>
+<li>Edit -&gt; Settings -&gt; Connection -&gt; SFTP</li>
+<li>Select the <code>.pem</code> file and add it to the list.</li>
+</ul>
+</li>
+<li>Add EC2 connection<ul>
+<li>File -&gt; Site Manager</li>
+<li>Host: EC2 Public IP (Could be check under EC2 Console)</li>
+<li>Protocol: SFTP</li>
+<li>Login Type: Normal</li>
+<li>User: ubuntu</li>
+<li>Password: /</li>
+</ul>
+</li>
+<li>Press <code>Connect</code></li>
+</ul>
+
+      
+    </div>
+    
+    <div class="article-info article-info-index">
+      
+      
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+    
+  </div>
+  
+</article>
+
+
+
+
+
+
+  
     <article id="post-160529-Gazebo-Control" class="article article-type-post" itemscope itemprop="blogPost">
   
     <div class="article-meta">
